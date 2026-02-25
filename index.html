@@ -1,555 +1,580 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QA Outreach Command Center</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <style>
-        body { margin: 0; padding: 0; font-family: 'IBM Plex Sans', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; }
-        #root { width: 100%; min-height: 100vh; }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
-        select option { background: #1a2332; color: #e8e8e8; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
-        ::-webkit-scrollbar-thumb { background: rgba(51,102,204,0.4); border-radius: 3px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QA Outreach Command Center</title>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body { margin: 0; padding: 0; font-family: 'IBM Plex Sans', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; }
+    #root { width: 100%; min-height: 100vh; }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+    select option { background: #1a2332; color: #e8e8e8; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+    ::-webkit-scrollbar-thumb { background: rgba(51,102,204,0.4); border-radius: 3px; }
+  </style>
 </head>
+
 <body>
-    <div id="root"></div>
-    <script type="text/babel">
-        const { useState, useEffect, useRef, useCallback } = React;
+  <div id="root"></div>
 
-        // ─── CONFIGURE THIS ───────────────────────────────────────────────────────
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0vqmuL2Ymbjca8F5zLKum_JuCNJqn9tHFSoOQ4hCiBXiCE1tqCrGuQNLCsCU983US/exec';
-        // ─────────────────────────────────────────────────────────────────────────
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
 
-        // ── Icon helpers ──────────────────────────────────────────────────────────
-        const Icon = ({ children, size = 24, style, ...p }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                strokeLinejoin="round" style={style} {...p}>{children}</svg>
+    // ─── CONFIGURE THIS ───────────────────────────────────────────────────────
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0vqmuL2Ymbjca8F5zLKum_JuCNJqn9tHFSoOQ4hCiBXiCE1tqCrGuQNLCsCU983US/exec';
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── Icon helpers ──────────────────────────────────────────────────────────
+    const Icon = ({ children, size = 24, style, ...p }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+        strokeLinejoin="round" style={style} {...p}>{children}</svg>
+    );
+    const Icons = {
+      Plus:       p => <Icon {...p}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></Icon>,
+      Send:       p => <Icon {...p}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></Icon>,
+      Calendar:   p => <Icon {...p}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></Icon>,
+      Target:     p => <Icon {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></Icon>,
+      Trending:   p => <Icon {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></Icon>,
+      Users:      p => <Icon {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></Icon>,
+      Mail:       p => <Icon {...p}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></Icon>,
+      Edit:       p => <Icon {...p}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></Icon>,
+      Trash:      p => <Icon {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></Icon>,
+      Search:     p => <Icon {...p}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></Icon>,
+      Check:      p => <Icon {...p}><polyline points="20 6 9 17 4 12"/></Icon>,
+      X:          p => <Icon {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Icon>,
+      Refresh:    p => <Icon {...p}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></Icon>,
+      Cloud:      p => <Icon {...p}><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></Icon>,
+      ExternalLink: p => <Icon {...p}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></Icon>,
+    };
+
+    // ── Score helpers ─────────────────────────────────────────────────────────
+    const calcScore = (lead) => {
+      const tw = { Dream: 2, Realistic: 1, Easy: 0, 'Not Relevant': 0 };
+      return (parseInt(lead.motivation) || 0) + (parseInt(lead.purchaseSignals) || 0) + (tw[lead.target] || 0);
+    };
+    const priorityColor = s => s >= 6 ? '#ff0000' : s >= 5 ? '#ff6b00' : s >= 4 ? '#3366cc' : '#666';
+    const targetColor   = t => ({ Dream: '#ff0000', Realistic: '#3366cc', Easy: '#00cc66' }[t] || '#666');
+
+    // ── Default messages ──────────────────────────────────────────────────────
+    const DEFAULT_MESSAGES = [
+      { id: 1, name: "Advisory Entry (Founder)", type: "advisory", subject: "QA Clarity for Your Startup", content: "Hey [NAME], great connecting at [EVENT]. Quick question — how are you currently handling QA/testing as you scale? I've been helping startups clarify and strengthen their QA approach before hiring. Happy to share insight if useful." },
+      { id: 2, name: "Follow-up (3-5 days)", type: "followup", subject: "Re: QA Clarity", content: "Just surfacing this in case it's helpful — I've seen early-stage teams struggle not because they lack QA, but because they don't define it properly. Even a 20-min clarity session can reveal blind spots." },
+      { id: 3, name: "Hiring Signal", type: "hiring", subject: "QA Hiring Support", content: "I noticed you're hiring for QA. If you'd like, I can send 2–3 carefully selected candidates already assessed for automation + CI/CD readiness." }
+    ];
+
+    const BLANK_LEAD = {
+      contactName: '', company: '', role: '', niche: '',
+      advocacy: 'No', target: 'Realistic', motivation: 2,
+      purchaseSignals: 2, nextAction: 'intro', followUpDate: '', messagesSent: '', notes: ''
+    };
+
+    function App() {
+      const [leads, setLeads]           = useState([]);
+      const [messages, setMessages]     = useState(() => {
+        try { return JSON.parse(localStorage.getItem('qaMessages')) || DEFAULT_MESSAGES; }
+        catch { return DEFAULT_MESSAGES; }
+      });
+      const [tab, setTab]               = useState('dashboard');
+      const [search, setSearch]         = useState('');
+      const [filterTarget, setFilter]   = useState('all');
+      const [showAdd, setShowAdd]       = useState(false);
+      const [editLead, setEditLead]     = useState(null);
+      const [newLead, setNewLead]       = useState(BLANK_LEAD);
+      const [syncState, setSyncState]   = useState({ status: 'idle', msg: '' }); // idle | loading | saving | ok | error
+      const saveTimer = useRef(null);
+
+      // ✅ NEW: guards to prevent "save empty array on first load"
+      const isHydratingRef = useRef(true);
+      const hasLoadedOnceRef = useRef(false);
+
+      const isConfigured = APPS_SCRIPT_URL && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE';
+
+      const fetchFromSheets = useCallback(async () => {
+        if (!isConfigured) {
+          setSyncState({ status: 'error', msg: 'Apps Script URL not configured' });
+          return;
+        }
+
+        // ✅ NEW: block autosave while we hydrate from Sheets
+        isHydratingRef.current = true;
+
+        setSyncState({ status: 'loading', msg: 'Loading from Google Sheets…' });
+        try {
+          const res = await fetch(`${APPS_SCRIPT_URL}?t=${Date.now()}`);
+          const data = await res.json();
+          if (data.error) throw new Error(data.error);
+
+          const loaded = (data.leads || []).map((l, i) => ({
+            ...l,
+            id: l.id || (Date.now() + i),
+            totalScore: calcScore(l),
+            motivation: parseInt(l.motivation) || 0,
+            purchaseSignals: parseInt(l.purchaseSignals) || 0,
+            dateAdded: l.dateAdded || new Date().toISOString()
+          }));
+
+          // ✅ NEW: allow autosave only after the first successful load
+          hasLoadedOnceRef.current = true;
+
+          setLeads(loaded);
+          setSyncState({ status: 'ok', msg: `Loaded ${loaded.length} leads from Google Sheets ✓` });
+          setTimeout(() => setSyncState({ status: 'idle', msg: '' }), 4000);
+        } catch (err) {
+          console.error('Fetch error:', err);
+          setSyncState({ status: 'error', msg: `Load failed: ${err.message}` });
+        }
+      }, [isConfigured]);
+
+      const saveToSheets = useCallback(async (leadsData) => {
+        if (!isConfigured) return;
+
+        setSyncState({ status: 'saving', msg: 'Saving to Google Sheets…' });
+        try {
+          await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              // OPTIONAL: if you ever want to intentionally clear the sheet from the UI,
+              // send allowClear: true (not recommended by default)
+              // allowClear: false,
+              leads: leadsData.map(l => ({
+                contactName:     l.contactName || '',
+                company:         l.company || '',
+                role:            l.role || '',
+                niche:           l.niche || '',
+                advocacy:        l.advocacy || 'No',
+                target:          l.target || 'Realistic',
+                motivation:      String(l.motivation || 0),
+                purchaseSignals: String(l.purchaseSignals || 0),
+                totalScore:      String(l.totalScore || 0),
+                nextAction:      l.nextAction || '',
+                followUpDate:    l.followUpDate || '',
+                messagesSent:    l.messagesSent || '',
+                notes:           l.notes || '',
+                dateAdded:       l.dateAdded ? new Date(l.dateAdded).toLocaleDateString() : ''
+              }))
+            })
+          });
+
+          setSyncState({ status: 'ok', msg: `Saved ${leadsData.length} leads ✓` });
+          setTimeout(() => setSyncState({ status: 'idle', msg: '' }), 4000);
+        } catch (err) {
+          console.error('Save error:', err);
+          setSyncState({ status: 'error', msg: 'Save failed — check console' });
+        }
+      }, [isConfigured]);
+
+      // ── Load on mount ─────────────────────────────────────────────────────
+      useEffect(() => {
+        fetchFromSheets();
+      }, []);
+
+      // ✅ NEW: release hydration lock after load completes (ok or error)
+      useEffect(() => {
+        if (syncState.status === 'ok' || syncState.status === 'error') {
+          isHydratingRef.current = false;
+        }
+      }, [syncState.status]);
+
+      // ✅ UPDATED: Debounced auto-save on leads change (SAFE)
+      useEffect(() => {
+        if (!isConfigured) return;
+
+        // Prevent the "save empty array on first load" bug
+        if (!hasLoadedOnceRef.current) return;
+        if (isHydratingRef.current) return;
+        if (syncState.status === 'loading') return;
+
+        clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(() => {
+          saveToSheets(leads);
+        }, 1500);
+
+        return () => clearTimeout(saveTimer.current);
+      }, [leads, saveToSheets, syncState.status, isConfigured]);
+
+      // ── Messages persist to localStorage ─────────────────────────────────
+      useEffect(() => {
+        localStorage.setItem('qaMessages', JSON.stringify(messages));
+      }, [messages]);
+
+      // ── Lead CRUD ─────────────────────────────────────────────────────────
+      const addLead = () => {
+        if (!newLead.contactName || !newLead.company) { alert('Contact Name and Company are required'); return; }
+        const lead = { ...newLead, id: Date.now(), totalScore: calcScore(newLead), dateAdded: new Date().toISOString() };
+        setLeads(prev => [...prev, lead]);
+        setNewLead(BLANK_LEAD);
+        setShowAdd(false);
+      };
+
+      const updateLead = (id, updates) => {
+        setLeads(prev => prev.map(l => l.id === id ? { ...l, ...updates, totalScore: calcScore({ ...l, ...updates }) } : l));
+      };
+
+      const deleteLead = (id) => {
+        if (!window.confirm('Delete this lead?')) return;
+        setLeads(prev => prev.filter(l => l.id !== id));
+      };
+
+      // ── Filtering ─────────────────────────────────────────────────────────
+      const filtered = leads.filter(l => {
+        const q = search.toLowerCase();
+        return (q === '' || l.contactName?.toLowerCase().includes(q) || l.company?.toLowerCase().includes(q))
+          && (filterTarget === 'all' || l.target === filterTarget);
+      }).sort((a, b) => b.totalScore - a.totalScore);
+
+      const stats = {
+        total: leads.length,
+        high: leads.filter(l => calcScore(l) >= 5).length,
+        messaged: leads.filter(l => l.messagesSent).length,
+        booked: leads.filter(l => l.nextAction === 'call booked').length,
+        avg: leads.length ? (leads.reduce((s, l) => s + calcScore(l), 0) / leads.length).toFixed(1) : 0
+      };
+
+      const syncBadge = () => {
+        const s = syncState;
+        if (s.status === 'idle') return null;
+        const colors = { loading: '#3366cc', saving: '#ff9900', ok: '#00cc66', error: '#ff0000' };
+        const icons  = { loading: '⏳', saving: '💾', ok: '✅', error: '❌' };
+        return (
+          <div style={{
+            padding: '0.5rem 1rem', borderRadius: 8, fontSize: '0.82rem', fontWeight: 600,
+            background: `${colors[s.status]}22`, color: colors[s.status],
+            border: `1px solid ${colors[s.status]}55`, display: 'flex', alignItems: 'center', gap: 6
+          }}>
+            {icons[s.status]} {s.msg}
+          </div>
         );
-        const Icons = {
-            Plus:       p => <Icon {...p}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></Icon>,
-            Send:       p => <Icon {...p}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></Icon>,
-            Calendar:   p => <Icon {...p}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></Icon>,
-            Target:     p => <Icon {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></Icon>,
-            Trending:   p => <Icon {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></Icon>,
-            Users:      p => <Icon {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></Icon>,
-            Mail:       p => <Icon {...p}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></Icon>,
-            Edit:       p => <Icon {...p}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></Icon>,
-            Trash:      p => <Icon {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></Icon>,
-            Search:     p => <Icon {...p}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></Icon>,
-            Check:      p => <Icon {...p}><polyline points="20 6 9 17 4 12"/></Icon>,
-            X:          p => <Icon {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Icon>,
-            Refresh:    p => <Icon {...p}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></Icon>,
-            Cloud:      p => <Icon {...p}><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></Icon>,
-            ExternalLink: p => <Icon {...p}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></Icon>,
-        };
+      };
 
-        // ── Score helpers ─────────────────────────────────────────────────────────
-        const calcScore = (lead) => {
-            const tw = { Dream: 2, Realistic: 1, Easy: 0, 'Not Relevant': 0 };
-            return (parseInt(lead.motivation) || 0) + (parseInt(lead.purchaseSignals) || 0) + (tw[lead.target] || 0);
-        };
-        const priorityColor = s => s >= 6 ? '#ff0000' : s >= 5 ? '#ff6b00' : s >= 4 ? '#3366cc' : '#666';
-        const targetColor   = t => ({ Dream: '#ff0000', Realistic: '#3366cc', Easy: '#00cc66' }[t] || '#666');
+      return (
+        <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f1419 0%, #1a2332 100%)', color: '#e8e8e8' }}>
+          <header style={{ background: 'rgba(51,102,204,0.05)', borderBottom: '1px solid rgba(51,102,204,0.2)', padding: '1.25rem 2rem', backdropFilter: 'blur(10px)', position: 'sticky', top: 0, zIndex: 100 }}>
+            <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 700, background: 'linear-gradient(135deg, #3366cc, #5588ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em' }}>
+                  QA Outreach Command Center
+                </h1>
+                <p style={{ margin: '0.2rem 0 0', color: '#888', fontSize: '0.82rem' }}>LAMP-Driven Lead Prioritization · Two-way Google Sheets Sync</p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                {syncBadge()}
+                <Btn onClick={fetchFromSheets} disabled={syncState.status === 'loading'} color="#3366cc"
+                  title="Reload data from Google Sheets">
+                  <Icons.Refresh size={15}/> Reload from Sheets
+                </Btn>
+                <Btn onClick={() => saveToSheets(leads)} disabled={syncState.status === 'saving'} color="#00cc66">
+                  <Icons.Cloud size={15}/> Save to Sheets
+                </Btn>
+                {['dashboard', 'messages'].map(t => (
+                  <button key={t} onClick={() => setTab(t)} style={{
+                    padding: '0.6rem 1.25rem', background: tab === t ? '#3366cc' : 'rgba(255,255,255,0.05)',
+                    border: 'none', borderRadius: 8, color: tab === t ? '#fff' : '#999',
+                    cursor: 'pointer', fontWeight: 600, fontSize: '0.88rem', textTransform: 'capitalize',
+                    transition: 'all 0.2s', boxShadow: tab === t ? '0 4px 12px rgba(51,102,204,0.3)' : 'none'
+                  }}>{t}</button>
+                ))}
+              </div>
+            </div>
+          </header>
 
-        // ── Default messages ──────────────────────────────────────────────────────
-        const DEFAULT_MESSAGES = [
-            { id: 1, name: "Advisory Entry (Founder)", type: "advisory", subject: "QA Clarity for Your Startup", content: "Hey [NAME], great connecting at [EVENT]. Quick question — how are you currently handling QA/testing as you scale? I've been helping startups clarify and strengthen their QA approach before hiring. Happy to share insight if useful." },
-            { id: 2, name: "Follow-up (3-5 days)", type: "followup", subject: "Re: QA Clarity", content: "Just surfacing this in case it's helpful — I've seen early-stage teams struggle not because they lack QA, but because they don't define it properly. Even a 20-min clarity session can reveal blind spots." },
-            { id: 3, name: "Hiring Signal", type: "hiring", subject: "QA Hiring Support", content: "I noticed you're hiring for QA. If you'd like, I can send 2–3 carefully selected candidates already assessed for automation + CI/CD readiness." }
-        ];
-
-        const BLANK_LEAD = {
-            contactName: '', company: '', role: '', niche: '',
-            advocacy: 'No', target: 'Realistic', motivation: 2,
-            purchaseSignals: 2, nextAction: 'intro', followUpDate: '', messagesSent: '', notes: ''
-        };
-
-        // ── Main App ──────────────────────────────────────────────────────────────
-        function App() {
-            const [leads, setLeads]           = useState([]);
-            const [messages, setMessages]     = useState(() => {
-                try { return JSON.parse(localStorage.getItem('qaMessages')) || DEFAULT_MESSAGES; } catch { return DEFAULT_MESSAGES; }
-            });
-            const [tab, setTab]               = useState('dashboard');
-            const [search, setSearch]         = useState('');
-            const [filterTarget, setFilter]   = useState('all');
-            const [showAdd, setShowAdd]       = useState(false);
-            const [editLead, setEditLead]     = useState(null);
-            const [newLead, setNewLead]       = useState(BLANK_LEAD);
-            const [syncState, setSyncState]   = useState({ status: 'idle', msg: '' }); // idle | loading | saving | ok | error
-            const saveTimer = useRef(null);
-
-            // ── Sync helpers ──────────────────────────────────────────────────────
-            const isConfigured = APPS_SCRIPT_URL && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE';
-
-            const fetchFromSheets = useCallback(async () => {
-                if (!isConfigured) {
-                    setSyncState({ status: 'error', msg: 'Apps Script URL not configured' });
-                    return;
-                }
-                setSyncState({ status: 'loading', msg: 'Loading from Google Sheets…' });
-                try {
-                    // Use a proxy-friendly approach: append timestamp to bust cache
-                    const res = await fetch(`${APPS_SCRIPT_URL}?t=${Date.now()}`);
-                    const data = await res.json();
-                    if (data.error) throw new Error(data.error);
-
-                    const loaded = (data.leads || []).map((l, i) => ({
-                        ...l,
-                        id: l.id || (Date.now() + i),
-                        totalScore: calcScore(l),
-                        motivation: parseInt(l.motivation) || 0,
-                        purchaseSignals: parseInt(l.purchaseSignals) || 0,
-                        dateAdded: l.dateAdded || new Date().toISOString()
-                    }));
-                    setLeads(loaded);
-                    setSyncState({ status: 'ok', msg: `Loaded ${loaded.length} leads from Google Sheets ✓` });
-                    setTimeout(() => setSyncState({ status: 'idle', msg: '' }), 4000);
-                } catch (err) {
-                    console.error('Fetch error:', err);
-                    setSyncState({ status: 'error', msg: `Load failed: ${err.message}` });
-                }
-            }, [isConfigured]);
-
-            const saveToSheets = useCallback(async (leadsData) => {
-                if (!isConfigured) return;
-                setSyncState({ status: 'saving', msg: 'Saving to Google Sheets…' });
-                try {
-                    await fetch(APPS_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            leads: leadsData.map(l => ({
-                                contactName:    l.contactName || '',
-                                company:        l.company || '',
-                                role:           l.role || '',
-                                niche:          l.niche || '',
-                                advocacy:       l.advocacy || 'No',
-                                target:         l.target || 'Realistic',
-                                motivation:     String(l.motivation || 0),
-                                purchaseSignals:String(l.purchaseSignals || 0),
-                                totalScore:     String(l.totalScore || 0),
-                                nextAction:     l.nextAction || '',
-                                followUpDate:   l.followUpDate || '',
-                                messagesSent:   l.messagesSent || '',
-                                notes:          l.notes || '',
-                                dateAdded:      l.dateAdded ? new Date(l.dateAdded).toLocaleDateString() : ''
-                            }))
-                        })
-                    });
-                    // no-cors means we can't read response — assume success
-                    setSyncState({ status: 'ok', msg: `Saved ${leadsData.length} leads ✓` });
-                    setTimeout(() => setSyncState({ status: 'idle', msg: '' }), 4000);
-                } catch (err) {
-                    console.error('Save error:', err);
-                    setSyncState({ status: 'error', msg: 'Save failed — check console' });
-                }
-            }, [isConfigured]);
-
-            // ── Load on mount ─────────────────────────────────────────────────────
-            useEffect(() => {
-                fetchFromSheets();
-            }, []);
-
-            // ── Debounced auto-save on leads change ───────────────────────────────
-            useEffect(() => {
-                if (leads.length === 0 && syncState.status === 'loading') return; // don't overwrite while loading
-                clearTimeout(saveTimer.current);
-                saveTimer.current = setTimeout(() => {
-                    saveToSheets(leads);
-                }, 1500); // debounce 1.5s
-                return () => clearTimeout(saveTimer.current);
-            }, [leads]);
-
-            // ── Messages persist to localStorage ─────────────────────────────────
-            useEffect(() => {
-                localStorage.setItem('qaMessages', JSON.stringify(messages));
-            }, [messages]);
-
-            // ── Lead CRUD ─────────────────────────────────────────────────────────
-            const addLead = () => {
-                if (!newLead.contactName || !newLead.company) { alert('Contact Name and Company are required'); return; }
-                const lead = { ...newLead, id: Date.now(), totalScore: calcScore(newLead), dateAdded: new Date().toISOString() };
-                setLeads(prev => [...prev, lead]);
-                setNewLead(BLANK_LEAD);
-                setShowAdd(false);
-            };
-
-            const updateLead = (id, updates) => {
-                setLeads(prev => prev.map(l => l.id === id ? { ...l, ...updates, totalScore: calcScore({ ...l, ...updates }) } : l));
-            };
-
-            const deleteLead = (id) => {
-                if (!window.confirm('Delete this lead?')) return;
-                setLeads(prev => prev.filter(l => l.id !== id));
-            };
-
-            // ── Filtering ─────────────────────────────────────────────────────────
-            const filtered = leads.filter(l => {
-                const q = search.toLowerCase();
-                return (q === '' || l.contactName?.toLowerCase().includes(q) || l.company?.toLowerCase().includes(q))
-                    && (filterTarget === 'all' || l.target === filterTarget);
-            }).sort((a, b) => b.totalScore - a.totalScore);
-
-            const stats = {
-                total: leads.length,
-                high: leads.filter(l => calcScore(l) >= 5).length,
-                messaged: leads.filter(l => l.messagesSent).length,
-                booked: leads.filter(l => l.nextAction === 'call booked').length,
-                avg: leads.length ? (leads.reduce((s, l) => s + calcScore(l), 0) / leads.length).toFixed(1) : 0
-            };
-
-            // ── Sync badge ────────────────────────────────────────────────────────
-            const syncBadge = () => {
-                const s = syncState;
-                if (s.status === 'idle') return null;
-                const colors = { loading: '#3366cc', saving: '#ff9900', ok: '#00cc66', error: '#ff0000' };
-                const icons  = { loading: '⏳', saving: '💾', ok: '✅', error: '❌' };
-                return (
-                    <div style={{
-                        padding: '0.5rem 1rem', borderRadius: 8, fontSize: '0.82rem', fontWeight: 600,
-                        background: `${colors[s.status]}22`, color: colors[s.status],
-                        border: `1px solid ${colors[s.status]}55`, display: 'flex', alignItems: 'center', gap: 6
-                    }}>
-                        {icons[s.status]} {s.msg}
-                    </div>
-                );
-            };
-
-            return (
-                <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f1419 0%, #1a2332 100%)', color: '#e8e8e8' }}>
-                    {/* ── Header ── */}
-                    <header style={{ background: 'rgba(51,102,204,0.05)', borderBottom: '1px solid rgba(51,102,204,0.2)', padding: '1.25rem 2rem', backdropFilter: 'blur(10px)', position: 'sticky', top: 0, zIndex: 100 }}>
-                        <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                            <div>
-                                <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 700, background: 'linear-gradient(135deg, #3366cc, #5588ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em' }}>
-                                    QA Outreach Command Center
-                                </h1>
-                                <p style={{ margin: '0.2rem 0 0', color: '#888', fontSize: '0.82rem' }}>LAMP-Driven Lead Prioritization · Two-way Google Sheets Sync</p>
-                            </div>
-                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                                {syncBadge()}
-                                <Btn onClick={fetchFromSheets} disabled={syncState.status === 'loading'} color="#3366cc"
-                                    title="Reload data from Google Sheets">
-                                    <Icons.Refresh size={15}/> Reload from Sheets
-                                </Btn>
-                                <Btn onClick={() => saveToSheets(leads)} disabled={syncState.status === 'saving'} color="#00cc66">
-                                    <Icons.Cloud size={15}/> Save to Sheets
-                                </Btn>
-                                {['dashboard', 'messages'].map(t => (
-                                    <button key={t} onClick={() => setTab(t)} style={{
-                                        padding: '0.6rem 1.25rem', background: tab === t ? '#3366cc' : 'rgba(255,255,255,0.05)',
-                                        border: 'none', borderRadius: 8, color: tab === t ? '#fff' : '#999',
-                                        cursor: 'pointer', fontWeight: 600, fontSize: '0.88rem', textTransform: 'capitalize',
-                                        transition: 'all 0.2s', boxShadow: tab === t ? '0 4px 12px rgba(51,102,204,0.3)' : 'none'
-                                    }}>{t}</button>
-                                ))}
-                            </div>
-                        </div>
-                    </header>
-
-                    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '2rem' }}>
-                        {tab === 'dashboard' && (
-                            <>
-                                {/* Stats */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-                                    <Stat icon={<Icons.Users size={22}/>} label="Total Leads"    value={stats.total}    color="#3366cc"/>
-                                    <Stat icon={<Icons.Target size={22}/>}  label="High Priority"  value={stats.high}     color="#ff0000" sub="Score ≥ 5"/>
-                                    <Stat icon={<Icons.Mail size={22}/>}   label="Messaged"       value={stats.messaged}  color="#888"/>
-                                    <Stat icon={<Icons.Calendar size={22}/>} label="Calls Booked" value={stats.booked}   color="#00cc66"/>
-                                    <Stat icon={<Icons.Trending size={22}/>} label="Avg Score"    value={stats.avg}      color="#3366cc"/>
-                                </div>
-
-                                {/* Toolbar */}
-                                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                                    <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
-                                        <Icons.Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#666' }}/>
-                                        <input type="text" placeholder="Search by name or company…" value={search}
-                                            onChange={e => setSearch(e.target.value)}
-                                            style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 8, color: '#e8e8e8', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}/>
-                                    </div>
-                                    <select value={filterTarget} onChange={e => setFilter(e.target.value)}
-                                        style={{ padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 8, color: '#e8e8e8', fontSize: '0.9rem', cursor: 'pointer' }}>
-                                        <option value="all">All Targets</option>
-                                        <option value="Dream">Dream</option>
-                                        <option value="Realistic">Realistic</option>
-                                        <option value="Easy">Easy</option>
-                                        <option value="Not Relevant">Not Relevant</option>
-                                    </select>
-                                    <Btn onClick={() => setShowAdd(true)} color="#3366cc">
-                                        <Icons.Plus size={16}/> Add Lead
-                                    </Btn>
-                                </div>
-
-                                {/* Table */}
-                                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 12, overflow: 'hidden' }}>
-                                    {syncState.status === 'loading' ? (
-                                        <div style={{ padding: '3rem', textAlign: 'center', color: '#888' }}>
-                                            <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
-                                            Loading leads from Google Sheets…
-                                        </div>
-                                    ) : (
-                                    <div style={{ overflowX: 'auto' }}>
-                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                            <thead>
-                                                <tr style={{ background: 'rgba(51,102,204,0.1)' }}>
-                                                    {['Score','Contact','Company','Role','Target','M','PS','Advocacy','Next Action','Messages','Actions'].map(h => (
-                                                        <th key={h} style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.78rem', fontWeight: 700, color: '#3366cc', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {filtered.length === 0 ? (
-                                                    <tr><td colSpan={11} style={{ padding: '3rem', textAlign: 'center', color: '#666' }}>
-                                                        {leads.length === 0 ? 'No leads yet. Click "Add Lead" or reload from Sheets.' : 'No leads match your search.'}
-                                                    </td></tr>
-                                                ) : filtered.map(l => (
-                                                    <LeadRow key={l.id} lead={l} updateLead={updateLead} deleteLead={deleteLead} setEditLead={setEditLead}/>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    )}
-                                </div>
-                            </>
-                        )}
-
-                        {tab === 'messages' && (
-                            <MessagesTab messages={messages} setMessages={setMessages}/>
-                        )}
-                    </div>
-
-                    {showAdd && <AddModal lead={newLead} setLead={setNewLead} onAdd={addLead} onClose={() => setShowAdd(false)}/>}
-                    {editLead && <EditModal lead={editLead} setLead={setEditLead} onSave={() => { updateLead(editLead.id, editLead); setEditLead(null); }} onClose={() => setEditLead(null)}/>}
+          <div style={{ maxWidth: 1400, margin: '0 auto', padding: '2rem' }}>
+            {tab === 'dashboard' && (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+                  <Stat icon={<Icons.Users size={22}/>} label="Total Leads" value={stats.total} color="#3366cc"/>
+                  <Stat icon={<Icons.Target size={22}/>} label="High Priority" value={stats.high} color="#ff0000" sub="Score ≥ 5"/>
+                  <Stat icon={<Icons.Mail size={22}/>} label="Messaged" value={stats.messaged} color="#888"/>
+                  <Stat icon={<Icons.Calendar size={22}/>} label="Calls Booked" value={stats.booked} color="#00cc66"/>
+                  <Stat icon={<Icons.Trending size={22}/>} label="Avg Score" value={stats.avg} color="#3366cc"/>
                 </div>
-            );
-        }
 
-        // ── Small reusable button ─────────────────────────────────────────────────
-        function Btn({ children, onClick, disabled, color = '#3366cc', title }) {
-            return (
-                <button onClick={onClick} disabled={disabled} title={title} style={{
-                    padding: '0.65rem 1.1rem', background: `${color}22`, border: `1px solid ${color}55`,
-                    borderRadius: 8, color: color, cursor: disabled ? 'not-allowed' : 'pointer',
-                    fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
-                    opacity: disabled ? 0.5 : 1, whiteSpace: 'nowrap', transition: 'all 0.2s'
-                }}>{children}</button>
-            );
-        }
-
-        // ── Stat card ─────────────────────────────────────────────────────────────
-        function Stat({ icon, label, value, color, sub }) {
-            return (
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 12, padding: '1.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-                        <div style={{ padding: '0.625rem', background: `${color}22`, borderRadius: 8, color, display: 'flex' }}>{icon}</div>
-                        <div>
-                            <div style={{ fontSize: '0.8rem', color: '#888' }}>{label}</div>
-                            <div style={{ fontSize: '1.9rem', fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-                        </div>
-                    </div>
-                    {sub && <div style={{ fontSize: '0.72rem', color: '#666', marginTop: '0.5rem' }}>{sub}</div>}
+                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
+                    <Icons.Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#666' }}/>
+                    <input type="text" placeholder="Search by name or company…" value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 8, color: '#e8e8e8', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}/>
+                  </div>
+                  <select value={filterTarget} onChange={e => setFilter(e.target.value)}
+                    style={{ padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 8, color: '#e8e8e8', fontSize: '0.9rem', cursor: 'pointer' }}>
+                    <option value="all">All Targets</option>
+                    <option value="Dream">Dream</option>
+                    <option value="Realistic">Realistic</option>
+                    <option value="Easy">Easy</option>
+                    <option value="Not Relevant">Not Relevant</option>
+                  </select>
+                  <Btn onClick={() => setShowAdd(true)} color="#3366cc">
+                    <Icons.Plus size={16}/> Add Lead
+                  </Btn>
                 </div>
-            );
-        }
 
-        // ── Lead table row ────────────────────────────────────────────────────────
-        function LeadRow({ lead, updateLead, deleteLead, setEditLead }) {
-            const score = lead.totalScore;
-            const pc = priorityColor(score);
-            const tc = targetColor(lead.target);
-            const td = { padding: '0.875rem 1rem', fontSize: '0.88rem', color: '#e8e8e8', borderBottom: '1px solid rgba(255,255,255,0.04)' };
-            return (
-                <tr style={{ transition: 'background 0.15s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(51,102,204,0.05)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <td style={td}>
-                        <div style={{ width: 38, height: 38, borderRadius: 8, background: `${pc}22`, border: `2px solid ${pc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: pc, fontSize: '1rem' }}>{score}</div>
-                    </td>
-                    <td style={td}>
-                        <div style={{ fontWeight: 600 }}>{lead.contactName}</div>
-                        {lead.niche && <div style={{ fontSize: '0.75rem', color: '#888' }}>{lead.niche}</div>}
-                    </td>
-                    <td style={td}>{lead.company}</td>
-                    <td style={td}>{lead.role}</td>
-                    <td style={td}>
-                        <span style={{ padding: '0.2rem 0.65rem', borderRadius: 6, fontSize: '0.75rem', fontWeight: 600, background: `${tc}22`, color: tc, border: `1px solid ${tc}44` }}>{lead.target}</span>
-                    </td>
-                    <td style={td}><ScorePill val={lead.motivation}/></td>
-                    <td style={td}><ScorePill val={lead.purchaseSignals}/></td>
-                    <td style={td}>
-                        {lead.advocacy === 'Yes'
-                            ? <Icons.Check size={18} style={{ color: '#00cc66' }}/>
-                            : <Icons.X size={18} style={{ color: '#555' }}/>}
-                    </td>
-                    <td style={{ ...td, minWidth: 150 }}>
-                        <select value={lead.nextAction} onChange={e => updateLead(lead.id, { nextAction: e.target.value })}
-                            style={{ padding: '0.45rem 0.6rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 6, color: '#e8e8e8', fontSize: '0.82rem', cursor: 'pointer', width: '100%' }}>
-                            <option value="intro">Intro</option>
-                            <option value="message sent">Message Sent</option>
-                            <option value="follow-up date">Follow-up Date</option>
-                            <option value="call booked">Call Booked</option>
-                            <option value="closed">Closed</option>
-                        </select>
-                        {lead.nextAction === 'follow-up date' && (
-                            <input type="date" value={lead.followUpDate || ''} onChange={e => updateLead(lead.id, { followUpDate: e.target.value })}
-                                style={{ marginTop: 6, padding: '0.4rem 0.6rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 6, color: '#e8e8e8', fontSize: '0.82rem', width: '100%', boxSizing: 'border-box' }}/>
-                        )}
-                    </td>
-                    <td style={{ ...td, minWidth: 140 }}>
-                        <input type="text" value={lead.messagesSent || ''} onChange={e => updateLead(lead.id, { messagesSent: e.target.value })}
-                            placeholder="e.g. Msg 1 sent 2/20"
-                            style={{ padding: '0.45rem 0.6rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 6, color: '#e8e8e8', fontSize: '0.82rem', width: '100%', boxSizing: 'border-box' }}/>
-                    </td>
-                    <td style={td}>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                            <button onClick={() => setEditLead(lead)} style={{ padding: '0.45rem', background: 'rgba(51,102,204,0.2)', border: 'none', borderRadius: 6, color: '#3366cc', cursor: 'pointer' }}><Icons.Edit size={15}/></button>
-                            <button onClick={() => deleteLead(lead.id)} style={{ padding: '0.45rem', background: 'rgba(255,0,0,0.15)', border: 'none', borderRadius: 6, color: '#ff4444', cursor: 'pointer' }}><Icons.Trash size={15}/></button>
-                        </div>
-                    </td>
-                </tr>
-            );
-        }
-
-        function ScorePill({ val }) {
-            const n = parseInt(val) || 0;
-            return <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 6, background: n >= 2 ? 'rgba(0,204,102,0.2)' : 'rgba(255,255,255,0.06)', fontWeight: 600, fontSize: '0.85rem', color: n >= 2 ? '#00cc66' : '#888' }}>{n}</span>;
-        }
-
-        // ── Messages Tab ──────────────────────────────────────────────────────────
-        function MessagesTab({ messages, setMessages }) {
-            const addMessage = () => {
-                const name = prompt('Template name:'); if (!name) return;
-                const content = prompt('Message content:'); if (!content) return;
-                setMessages(prev => [...prev, { id: Date.now(), name, type: 'custom', subject: '', content }]);
-            };
-            const deleteMessage = id => { if (window.confirm('Delete template?')) setMessages(prev => prev.filter(m => m.id !== id)); };
-            const typeColor = t => ({ advisory: '#3366cc', hiring: '#00cc66', followup: '#ff9900' }[t] || '#888');
-
-            return (
-                <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700 }}>Message Templates</h2>
-                        <Btn onClick={addMessage} color="#3366cc"><Icons.Plus size={15}/> New Template</Btn>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 12, overflow: 'hidden' }}>
+                  {syncState.status === 'loading' ? (
+                    <div style={{ padding: '3rem', textAlign: 'center', color: '#888' }}>
+                      <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+                      Loading leads from Google Sheets…
                     </div>
-                    <div style={{ display: 'grid', gap: '1.25rem' }}>
-                        {messages.map(m => {
-                            const tc = typeColor(m.type);
-                            return (
-                                <div key={m.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 12, padding: '1.5rem' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.875rem' }}>
-                                        <div>
-                                            <h3 style={{ margin: '0 0 0.4rem', fontSize: '1rem', fontWeight: 600 }}>{m.name}</h3>
-                                            <span style={{ padding: '0.2rem 0.65rem', borderRadius: 6, fontSize: '0.7rem', fontWeight: 700, background: `${tc}22`, color: tc, textTransform: 'uppercase' }}>{m.type}</span>
-                                        </div>
-                                        <button onClick={() => deleteMessage(m.id)} style={{ padding: '0.45rem', background: 'rgba(255,0,0,0.1)', border: 'none', borderRadius: 6, color: '#ff4444', cursor: 'pointer' }}><Icons.Trash size={15}/></button>
-                                    </div>
-                                    {m.subject && <div style={{ marginBottom: '0.75rem', fontSize: '0.85rem', color: '#aaa' }}>Subject: <strong style={{ color: '#e8e8e8' }}>{m.subject}</strong></div>}
-                                    <div style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: '0.9rem', lineHeight: 1.65, color: '#ccc', whiteSpace: 'pre-wrap', marginBottom: '0.875rem' }}>{m.content}</div>
-                                    <button onClick={() => { navigator.clipboard.writeText(m.content); alert('Copied!'); }}
-                                        style={{ padding: '0.5rem 1rem', background: 'rgba(51,102,204,0.2)', border: '1px solid #3366cc55', borderRadius: 6, color: '#3366cc', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                                        <Icons.Send size={13}/> Copy Message
-                                    </button>
-                                </div>
-                            );
-                        })}
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ background: 'rgba(51,102,204,0.1)' }}>
+                            {['Score','Contact','Company','Role','Target','M','PS','Advocacy','Next Action','Messages','Actions'].map(h => (
+                              <th key={h} style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.78rem', fontWeight: 700, color: '#3366cc', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filtered.length === 0 ? (
+                            <tr><td colSpan={11} style={{ padding: '3rem', textAlign: 'center', color: '#666' }}>
+                              {leads.length === 0 ? 'No leads yet. Click "Add Lead" or reload from Sheets.' : 'No leads match your search.'}
+                            </td></tr>
+                          ) : filtered.map(l => (
+                            <LeadRow key={l.id} lead={l} updateLead={updateLead} deleteLead={deleteLead} setEditLead={setEditLead}/>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
+                  )}
                 </div>
-            );
-        }
+              </>
+            )}
 
-        // ── Modal shell ───────────────────────────────────────────────────────────
-        function Modal({ children, onClose }) {
-            return (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1.5rem' }}
-                    onClick={onClose}>
-                    <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(135deg,#1a2332,#0f1419)', border: '1px solid rgba(51,102,204,0.3)', borderRadius: 16, padding: '2rem', maxWidth: 580, width: '100%', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
-                        {children}
+            {tab === 'messages' && (
+              <MessagesTab messages={messages} setMessages={setMessages}/>
+            )}
+          </div>
+
+          {showAdd && <AddModal lead={newLead} setLead={setNewLead} onAdd={addLead} onClose={() => setShowAdd(false)}/>}
+          {editLead && <EditModal lead={editLead} setLead={setEditLead} onSave={() => { updateLead(editLead.id, editLead); setEditLead(null); }} onClose={() => setEditLead(null)}/>}
+        </div>
+      );
+    }
+
+    // ── Small reusable button ─────────────────────────────────────────────────
+    function Btn({ children, onClick, disabled, color = '#3366cc', title }) {
+      return (
+        <button onClick={onClick} disabled={disabled} title={title} style={{
+          padding: '0.65rem 1.1rem', background: `${color}22`, border: `1px solid ${color}55`,
+          borderRadius: 8, color: color, cursor: disabled ? 'not-allowed' : 'pointer',
+          fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
+          opacity: disabled ? 0.5 : 1, whiteSpace: 'nowrap', transition: 'all 0.2s'
+        }}>{children}</button>
+      );
+    }
+
+    // ── Stat card ─────────────────────────────────────────────────────────────
+    function Stat({ icon, label, value, color, sub }) {
+      return (
+        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 12, padding: '1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+            <div style={{ padding: '0.625rem', background: `${color}22`, borderRadius: 8, color, display: 'flex' }}>{icon}</div>
+            <div>
+              <div style={{ fontSize: '0.8rem', color: '#888' }}>{label}</div>
+              <div style={{ fontSize: '1.9rem', fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
+            </div>
+          </div>
+          {sub && <div style={{ fontSize: '0.72rem', color: '#666', marginTop: '0.5rem' }}>{sub}</div>}
+        </div>
+      );
+    }
+
+    // ── Lead table row ────────────────────────────────────────────────────────
+    function LeadRow({ lead, updateLead, deleteLead, setEditLead }) {
+      const score = lead.totalScore;
+      const pc = priorityColor(score);
+      const tc = targetColor(lead.target);
+      const td = { padding: '0.875rem 1rem', fontSize: '0.88rem', color: '#e8e8e8', borderBottom: '1px solid rgba(255,255,255,0.04)' };
+      return (
+        <tr style={{ transition: 'background 0.15s' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(51,102,204,0.05)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+          <td style={td}>
+            <div style={{ width: 38, height: 38, borderRadius: 8, background: `${pc}22`, border: `2px solid ${pc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: pc, fontSize: '1rem' }}>{score}</div>
+          </td>
+          <td style={td}>
+            <div style={{ fontWeight: 600 }}>{lead.contactName}</div>
+            {lead.niche && <div style={{ fontSize: '0.75rem', color: '#888' }}>{lead.niche}</div>}
+          </td>
+          <td style={td}>{lead.company}</td>
+          <td style={td}>{lead.role}</td>
+          <td style={td}>
+            <span style={{ padding: '0.2rem 0.65rem', borderRadius: 6, fontSize: '0.75rem', fontWeight: 600, background: `${tc}22`, color: tc, border: `1px solid ${tc}44` }}>{lead.target}</span>
+          </td>
+          <td style={td}><ScorePill val={lead.motivation}/></td>
+          <td style={td}><ScorePill val={lead.purchaseSignals}/></td>
+          <td style={td}>
+            {lead.advocacy === 'Yes'
+              ? <Icons.Check size={18} style={{ color: '#00cc66' }}/>
+              : <Icons.X size={18} style={{ color: '#555' }}/>}
+          </td>
+          <td style={{ ...td, minWidth: 150 }}>
+            <select value={lead.nextAction} onChange={e => updateLead(lead.id, { nextAction: e.target.value })}
+              style={{ padding: '0.45rem 0.6rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 6, color: '#e8e8e8', fontSize: '0.82rem', cursor: 'pointer', width: '100%' }}>
+              <option value="intro">Intro</option>
+              <option value="message sent">Message Sent</option>
+              <option value="follow-up date">Follow-up Date</option>
+              <option value="call booked">Call Booked</option>
+              <option value="closed">Closed</option>
+            </select>
+            {lead.nextAction === 'follow-up date' && (
+              <input type="date" value={lead.followUpDate || ''} onChange={e => updateLead(lead.id, { followUpDate: e.target.value })}
+                style={{ marginTop: 6, padding: '0.4rem 0.6rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 6, color: '#e8e8e8', fontSize: '0.82rem', width: '100%', boxSizing: 'border-box' }}/>
+            )}
+          </td>
+          <td style={{ ...td, minWidth: 140 }}>
+            <input type="text" value={lead.messagesSent || ''} onChange={e => updateLead(lead.id, { messagesSent: e.target.value })}
+              placeholder="e.g. Msg 1 sent 2/20"
+              style={{ padding: '0.45rem 0.6rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 6, color: '#e8e8e8', fontSize: '0.82rem', width: '100%', boxSizing: 'border-box' }}/>
+          </td>
+          <td style={td}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => setEditLead(lead)} style={{ padding: '0.45rem', background: 'rgba(51,102,204,0.2)', border: 'none', borderRadius: 6, color: '#3366cc', cursor: 'pointer' }}><Icons.Edit size={15}/></button>
+              <button onClick={() => deleteLead(lead.id)} style={{ padding: '0.45rem', background: 'rgba(255,0,0,0.15)', border: 'none', borderRadius: 6, color: '#ff4444', cursor: 'pointer' }}><Icons.Trash size={15}/></button>
+            </div>
+          </td>
+        </tr>
+      );
+    }
+
+    function ScorePill({ val }) {
+      const n = parseInt(val) || 0;
+      return <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 6, background: n >= 2 ? 'rgba(0,204,102,0.2)' : 'rgba(255,255,255,0.06)', fontWeight: 600, fontSize: '0.85rem', color: n >= 2 ? '#00cc66' : '#888' }}>{n}</span>;
+    }
+
+    // ── Messages Tab ──────────────────────────────────────────────────────────
+    function MessagesTab({ messages, setMessages }) {
+      const addMessage = () => {
+        const name = prompt('Template name:'); if (!name) return;
+        const content = prompt('Message content:'); if (!content) return;
+        setMessages(prev => [...prev, { id: Date.now(), name, type: 'custom', subject: '', content }]);
+      };
+      const deleteMessage = id => { if (window.confirm('Delete template?')) setMessages(prev => prev.filter(m => m.id !== id)); };
+      const typeColor = t => ({ advisory: '#3366cc', hiring: '#00cc66', followup: '#ff9900' }[t] || '#888');
+
+      return (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700 }}>Message Templates</h2>
+            <Btn onClick={addMessage} color="#3366cc"><Icons.Plus size={15}/> New Template</Btn>
+          </div>
+          <div style={{ display: 'grid', gap: '1.25rem' }}>
+            {messages.map(m => {
+              const tc = typeColor(m.type);
+              return (
+                <div key={m.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 12, padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.875rem' }}>
+                    <div>
+                      <h3 style={{ margin: '0 0 0.4rem', fontSize: '1rem', fontWeight: 600 }}>{m.name}</h3>
+                      <span style={{ padding: '0.2rem 0.65rem', borderRadius: 6, fontSize: '0.7rem', fontWeight: 700, background: `${tc}22`, color: tc, textTransform: 'uppercase' }}>{m.type}</span>
                     </div>
+                    <button onClick={() => deleteMessage(m.id)} style={{ padding: '0.45rem', background: 'rgba(255,0,0,0.1)', border: 'none', borderRadius: 6, color: '#ff4444', cursor: 'pointer' }}><Icons.Trash size={15}/></button>
+                  </div>
+                  {m.subject && <div style={{ marginBottom: '0.75rem', fontSize: '0.85rem', color: '#aaa' }}>Subject: <strong style={{ color: '#e8e8e8' }}>{m.subject}</strong></div>}
+                  <div style={{ padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: 8, fontSize: '0.9rem', lineHeight: 1.65, color: '#ccc', whiteSpace: 'pre-wrap', marginBottom: '0.875rem' }}>{m.content}</div>
+                  <button onClick={() => { navigator.clipboard.writeText(m.content); alert('Copied!'); }}
+                    style={{ padding: '0.5rem 1rem', background: 'rgba(51,102,204,0.2)', border: '1px solid #3366cc55', borderRadius: 6, color: '#3366cc', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <Icons.Send size={13}/> Copy Message
+                  </button>
                 </div>
-            );
-        }
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
 
-        const inputStyle = { width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 8, color: '#e8e8e8', fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' };
-        const labelStyle = { display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: 600, color: '#bbb' };
+    // ── Modal shell ───────────────────────────────────────────────────────────
+    function Modal({ children, onClose }) {
+      return (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1.5rem' }}
+          onClick={onClose}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(135deg,#1a2332,#0f1419)', border: '1px solid rgba(51,102,204,0.3)', borderRadius: 16, padding: '2rem', maxWidth: 580, width: '100%', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+            {children}
+          </div>
+        </div>
+      );
+    }
 
-        function Field({ label, value, onChange, placeholder, multi }) {
-            return <div><label style={labelStyle}>{label}</label>{multi ? <textarea value={value} onChange={onChange} placeholder={placeholder} rows={3} style={inputStyle}/> : <input type="text" value={value} onChange={onChange} placeholder={placeholder} style={inputStyle}/>}</div>;
-        }
-        function Sel({ label, value, onChange, opts }) {
-            return <div><label style={labelStyle}>{label}</label><select value={value} onChange={onChange} style={inputStyle}>{opts.map(o => <option key={o} value={o}>{o}</option>)}</select></div>;
-        }
+    const inputStyle = { width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(51,102,204,0.2)', borderRadius: 8, color: '#e8e8e8', fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' };
+    const labelStyle = { display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: 600, color: '#bbb' };
 
-        // ── Add lead modal ────────────────────────────────────────────────────────
-        function AddModal({ lead, setLead, onAdd, onClose }) {
-            const s = x => setLead({ ...lead, ...x });
-            return (
-                <Modal onClose={onClose}>
-                    <h2 style={{ marginTop: 0, fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.25rem' }}>Add New Lead</h2>
-                    <div style={{ display: 'grid', gap: '0.875rem' }}>
-                        <Field label="Contact Name *" value={lead.contactName} onChange={e => s({ contactName: e.target.value })} placeholder="Jane Smith"/>
-                        <Field label="Company *" value={lead.company} onChange={e => s({ company: e.target.value })} placeholder="Acme Corp"/>
-                        <Field label="Role" value={lead.role} onChange={e => s({ role: e.target.value })} placeholder="CTO / VP Eng"/>
-                        <Field label="Niche / Product Type" value={lead.niche} onChange={e => s({ niche: e.target.value })} placeholder="SaaS, FinTech…"/>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                            <Sel label="Target" value={lead.target} onChange={e => s({ target: e.target.value })} opts={['Dream','Realistic','Easy','Not Relevant']}/>
-                            <Sel label="Advocacy" value={lead.advocacy} onChange={e => s({ advocacy: e.target.value })} opts={['Yes','No']}/>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                            <Sel label="Motivation (0–3)" value={String(lead.motivation)} onChange={e => s({ motivation: e.target.value })} opts={['3','2','1','0']}/>
-                            <Sel label="Purchase Signals (0–3)" value={String(lead.purchaseSignals)} onChange={e => s({ purchaseSignals: e.target.value })} opts={['3','2','1','0']}/>
-                        </div>
-                        <div style={{ padding: '0.875rem', background: 'rgba(51,102,204,0.1)', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, color: '#3366cc' }}>
-                            Calculated Score: {calcScore(lead)}
-                        </div>
-                        <Field label="Notes" value={lead.notes} onChange={e => s({ notes: e.target.value })} placeholder="Any context…" multi/>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.875rem', marginTop: '1.5rem' }}>
-                        <button onClick={onAdd} style={{ flex: 1, padding: '0.875rem', background: '#3366cc', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.95rem' }}>Add Lead</button>
-                        <button onClick={onClose} style={{ flex: 1, padding: '0.875rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#bbb', fontWeight: 600, cursor: 'pointer', fontSize: '0.95rem' }}>Cancel</button>
-                    </div>
-                </Modal>
-            );
-        }
+    function Field({ label, value, onChange, placeholder, multi }) {
+      return <div><label style={labelStyle}>{label}</label>{multi ? <textarea value={value} onChange={onChange} placeholder={placeholder} rows={3} style={inputStyle}/> : <input type="text" value={value} onChange={onChange} placeholder={placeholder} style={inputStyle}/>}</div>;
+    }
+    function Sel({ label, value, onChange, opts }) {
+      return <div><label style={labelStyle}>{label}</label><select value={value} onChange={onChange} style={inputStyle}>{opts.map(o => <option key={o} value={o}>{o}</option>)}</select></div>;
+    }
 
-        // ── Edit lead modal ───────────────────────────────────────────────────────
-        function EditModal({ lead, setLead, onSave, onClose }) {
-            const s = x => setLead({ ...lead, ...x });
-            return (
-                <Modal onClose={onClose}>
-                    <h2 style={{ marginTop: 0, fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.25rem' }}>Edit Lead</h2>
-                    <div style={{ display: 'grid', gap: '0.875rem' }}>
-                        <Field label="Contact Name" value={lead.contactName} onChange={e => s({ contactName: e.target.value })}/>
-                        <Field label="Company" value={lead.company} onChange={e => s({ company: e.target.value })}/>
-                        <Field label="Role" value={lead.role} onChange={e => s({ role: e.target.value })}/>
-                        <Field label="Niche / Product Type" value={lead.niche || ''} onChange={e => s({ niche: e.target.value })}/>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                            <Sel label="Target" value={lead.target} onChange={e => s({ target: e.target.value })} opts={['Dream','Realistic','Easy','Not Relevant']}/>
-                            <Sel label="Advocacy" value={lead.advocacy} onChange={e => s({ advocacy: e.target.value })} opts={['Yes','No']}/>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-                            <Sel label="Motivation (0–3)" value={String(lead.motivation)} onChange={e => s({ motivation: e.target.value })} opts={['3','2','1','0']}/>
-                            <Sel label="Purchase Signals (0–3)" value={String(lead.purchaseSignals)} onChange={e => s({ purchaseSignals: e.target.value })} opts={['3','2','1','0']}/>
-                        </div>
-                        <Field label="Notes" value={lead.notes || ''} onChange={e => s({ notes: e.target.value })} multi/>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.875rem', marginTop: '1.5rem' }}>
-                        <button onClick={onSave} style={{ flex: 1, padding: '0.875rem', background: '#3366cc', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.95rem' }}>Save Changes</button>
-                        <button onClick={onClose} style={{ flex: 1, padding: '0.875rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#bbb', fontWeight: 600, cursor: 'pointer', fontSize: '0.95rem' }}>Cancel</button>
-                    </div>
-                </Modal>
-            );
-        }
+    function AddModal({ lead, setLead, onAdd, onClose }) {
+      const s = x => setLead({ ...lead, ...x });
+      return (
+        <Modal onClose={onClose}>
+          <h2 style={{ marginTop: 0, fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.25rem' }}>Add New Lead</h2>
+          <div style={{ display: 'grid', gap: '0.875rem' }}>
+            <Field label="Contact Name *" value={lead.contactName} onChange={e => s({ contactName: e.target.value })} placeholder="Jane Smith"/>
+            <Field label="Company *" value={lead.company} onChange={e => s({ company: e.target.value })} placeholder="Acme Corp"/>
+            <Field label="Role" value={lead.role} onChange={e => s({ role: e.target.value })} placeholder="CTO / VP Eng"/>
+            <Field label="Niche / Product Type" value={lead.niche} onChange={e => s({ niche: e.target.value })} placeholder="SaaS, FinTech…"/>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+              <Sel label="Target" value={lead.target} onChange={e => s({ target: e.target.value })} opts={['Dream','Realistic','Easy','Not Relevant']}/>
+              <Sel label="Advocacy" value={lead.advocacy} onChange={e => s({ advocacy: e.target.value })} opts={['Yes','No']}/>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+              <Sel label="Motivation (0–3)" value={String(lead.motivation)} onChange={e => s({ motivation: e.target.value })} opts={['3','2','1','0']}/>
+              <Sel label="Purchase Signals (0–3)" value={String(lead.purchaseSignals)} onChange={e => s({ purchaseSignals: e.target.value })} opts={['3','2','1','0']}/>
+            </div>
+            <div style={{ padding: '0.875rem', background: 'rgba(51,102,204,0.1)', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, color: '#3366cc' }}>
+              Calculated Score: {calcScore(lead)}
+            </div>
+            <Field label="Notes" value={lead.notes} onChange={e => s({ notes: e.target.value })} placeholder="Any context…" multi/>
+          </div>
+          <div style={{ display: 'flex', gap: '0.875rem', marginTop: '1.5rem' }}>
+            <button onClick={onAdd} style={{ flex: 1, padding: '0.875rem', background: '#3366cc', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.95rem' }}>Add Lead</button>
+            <button onClick={onClose} style={{ flex: 1, padding: '0.875rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#bbb', fontWeight: 600, cursor: 'pointer', fontSize: '0.95rem' }}>Cancel</button>
+          </div>
+        </Modal>
+      );
+    }
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
-    </script>
+    function EditModal({ lead, setLead, onSave, onClose }) {
+      const s = x => setLead({ ...lead, ...x });
+      return (
+        <Modal onClose={onClose}>
+          <h2 style={{ marginTop: 0, fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.25rem' }}>Edit Lead</h2>
+          <div style={{ display: 'grid', gap: '0.875rem' }}>
+            <Field label="Contact Name" value={lead.contactName} onChange={e => s({ contactName: e.target.value })}/>
+            <Field label="Company" value={lead.company} onChange={e => s({ company: e.target.value })}/>
+            <Field label="Role" value={lead.role} onChange={e => s({ role: e.target.value })}/>
+            <Field label="Niche / Product Type" value={lead.niche || ''} onChange={e => s({ niche: e.target.value })}/>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+              <Sel label="Target" value={lead.target} onChange={e => s({ target: e.target.value })} opts={['Dream','Realistic','Easy','Not Relevant']}/>
+              <Sel label="Advocacy" value={lead.advocacy} onChange={e => s({ advocacy: e.target.value })} opts={['Yes','No']}/>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+              <Sel label="Motivation (0–3)" value={String(lead.motivation)} onChange={e => s({ motivation: e.target.value })} opts={['3','2','1','0']}/>
+              <Sel label="Purchase Signals (0–3)" value={String(lead.purchaseSignals)} onChange={e => s({ purchaseSignals: e.target.value })} opts={['3','2','1','0']}/>
+            </div>
+            <Field label="Notes" value={lead.notes || ''} onChange={e => s({ notes: e.target.value })} multi/>
+          </div>
+          <div style={{ display: 'flex', gap: '0.875rem', marginTop: '1.5rem' }}>
+            <button onClick={onSave} style={{ flex: 1, padding: '0.875rem', background: '#3366cc', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.95rem' }}>Save Changes</button>
+            <button onClick={onClose} style={{ flex: 1, padding: '0.875rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#bbb', fontWeight: 600, cursor: 'pointer', fontSize: '0.95rem' }}>Cancel</button>
+          </div>
+        </Modal>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
 </body>
 </html>
